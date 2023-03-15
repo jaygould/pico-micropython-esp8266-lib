@@ -13,6 +13,8 @@ This is a Micropython Library for RaspberryPi-Pico to communicate with ESP8266 u
 This is a basic AT Command library for RaspberryPi-Pico, which simplifies the communication process with the ESP8266. 
 The best way to understand the library is with the example shown below, This example shows you how to activate access point mode to allow you to connect to the ESP **without an internet connection** and see data directly on the Pico.
 
+**Important**: don't forget to [update the lib](https://github.com/jaygould/pico-micropython-esp8266-lib/blob/main/esp8266.py#L34) to add your own UART port, baud rate and GPIO (TX/RX) pins.  
+
 The example here is basic at the moment, but can easily be extended to allow data access to sensors and other UART connected modules like GPS:
 
 ### Use ESP as a web server
