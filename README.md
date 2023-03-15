@@ -19,7 +19,7 @@ The example here is basic at the moment, but can easily be extended to allow dat
 
 ### Use ESP as a web server
 
-Run the below, and **connect to 
+Run the below, and **connect to the "Yoshi" WiFi network on your phone/computer**. The ESP module will act as a stand-alone access point, independent of the internet, serving you content that is programmed on to the module. This is good for easily viewing data from components connected to your Pi: 
 
 ```python
 from esp import ESP8266
