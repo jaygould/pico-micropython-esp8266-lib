@@ -1,13 +1,4 @@
 # Raspberry Pi Pico Micropython ESP8266 Library
-[![GitHub version](https://img.shields.io/github/release/noyelseth/rpi-pico-micropython-esp8266-lib.svg)](lib-release)
-[![GitHub download](https://img.shields.io/github/downloads/noyelseth/rpi-pico-micropython-esp8266-lib/total.svg)](lib-release)
-[![GitHub stars](https://img.shields.io/github/stars/noyelseth/rpi-pico-micropython-esp8266-lib.svg)](lib-stars)
-[![GitHub issues](https://img.shields.io/github/issues/noyelseth/rpi-pico-micropython-esp8266-lib.svg)](lib-issues)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](lib-licence)
-
-<p align="center">
-<img src="https://user-images.githubusercontent.com/29272159/134866689-f3a34753-1583-441e-917b-6d599b8c0fc8.png" width="250"><img src="https://user-images.githubusercontent.com/29272159/134866581-f0d7cf42-9fc0-48bc-a859-7d74b070a3fd.png" width="150"><img src="https://user-images.githubusercontent.com/29272159/134868586-bd05f5e9-eaf2-4ac2-9688-7aca16165bf8.png" width="350">
-</p>
 
 ## Description
 This is a Micropython Library for RaspberryPi-Pico to communicate with ESP8266 using AT command.
@@ -18,10 +9,42 @@ This is a Micropython Library for RaspberryPi-Pico to communicate with ESP8266 u
 </p>
 
 ## Getting Started with Examples
-This is a basic AT Command library for RaspberryPi-Pico, which simplifies the communication process with the ESP8266. 
-The best way to understand the library is with the example shown below, This example shows you how to make a GET/POST request using ESP8266 with the help of the RaspberryPi-Pico.
 
-### How to Use Library
+This is a basic AT Command library for RaspberryPi-Pico, which simplifies the communication process with the ESP8266. 
+The best way to understand the library is with the example shown below, This example shows you how to activate access point mode to allow you to connect to the ESP **without an internet connection** and see data directly on the Pico.
+
+The example here is basic at the moment, but can easily be extended to allow data access to sensors and other UART connected modules like GPS:
+
+### Use ESP as a web server
+
+Run the below, and **connect to 
+
+```python
+from esp import ESP8266
+
+esp01 = ESP8266()
+esp8266_at_ver = None
+esp8266_at_ver = esp01.getVersion()
+if(esp8266_at_ver != None):
+    print("AT version: ",esp8266_at_ver)
+
+print("StartUP: ",esp01.startUP())
+print("Echo-Off: ",esp01.echoING())
+
+
+print("WiFi Current Mode: ",esp01.setCurrentWiFiMode())
+print("Set as access point: ",esp01.createAsAccessPoint('Yoshi'))
+print("Local IP address: ",esp01.getLocalIpAddress())
+print("Create server: ",esp01.createServer())
+
+esp01.listenForConnections()
+
+```
+
+Here's another example of using as a web server and performing HTTP requests to the web:
+
+### Connect ESP to internet and perform HTTP requests
+
 ```python
 from machine import Pin
 from esp8266 import ESP8266
@@ -37,28 +60,17 @@ led=Pin(25,Pin.OUT)
 ## Create an ESP8266 Object
 esp01 = ESP8266()
 esp8266_at_ver = None
+esp8266_at_ver = esp01.getVersion()
+if(esp8266_at_ver != None):
+    print(esp8266_at_ver)
+
 
 print("StartUP",esp01.startUP())
 print("Echo-Off",esp01.echoING())
 print("\r\n")
 
-'''
-Print ESP8266 AT comand version and SDK details
-'''
-esp8266_at_ver = esp01.getVersion()
-if(esp8266_at_ver != None):
-    print(esp8266_at_ver)
-
-'''
-set the current WiFi in SoftAP+STA
-'''
 print("WiFi Current Mode:",esp01.setCurrentWiFiMode()
   
-print("\r\n\r\n")
-
-'''
-Connect with the WiFi
-'''
 print("Try to connect with the WiFi..")
 while (1):
     if "WIFI CONNECTED" in esp01.connectWiFi("ssid","pwd"):
@@ -76,9 +88,6 @@ while(1):
     led.toggle()
     time.sleep(1)
     
-    '''
-    Going to do HTTP Get Operation with www.httpbin.org/ip, It return the IP address of the connected device
-    '''
     httpCode, httpRes = esp01.doHttpGet("www.httpbin.org","/ip","RaspberryPi-Pico", port=80)
     print("------------- www.httpbin.org/ip Get Operation Result -----------------------")
     print("HTTP Code:",httpCode)
@@ -86,9 +95,6 @@ while(1):
     print("-----------------------------------------------------------------------------\r\n\r\n")
     
     
-    '''
-    Going to do HTTP Post Operation with www.httpbin.org/post
-    '''
     post_json="{\"name\":\"Noyel\"}"
     httpCode, httpRes = esp01.doHttpPost("www.httpbin.org","/post","RPi-Pico", "application/json",post_json,port=80)
     print("------------- www.httpbin.org/post Post Operation Result -----------------------")
@@ -96,17 +102,3 @@ while(1):
     print("HTTP Response:",httpRes)
     print("--------------------------------------------------------------------------------\r\n\r\n")
 ```
-
-
-
-
-## Contributing
-You are very welcome to contribute: stability bugfixes, new hardware support, or any other improvements. Please.
-[![GitHub stars](https://img.shields.io/github/stars/noyelseth/rpi-pico-micropython-esp8266-lib.svg?style=social&label=Star)](lib-stars)
-[![GitHub forks](https://img.shields.io/github/forks/noyelseth/rpi-pico-micropython-esp8266-lib.svg?style=social&label=Fork)](lib-network)
-
-
-### License
-This project is released under The MIT License (MIT) © [Noyel Seth](https://github.com/noyelseth)
-
- 

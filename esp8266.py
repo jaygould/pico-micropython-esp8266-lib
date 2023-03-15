@@ -31,7 +31,7 @@ class ESP8266:
     __txData=None
     __httpResponse=None
     
-    def __init__(self, uartPort=0 ,baudRate=115200, txPin=(0), rxPin=(1)):
+    def __init__(self, uartPort=1 ,baudRate=115200, txPin=(8), rxPin=(9)):
         """
         The constaructor for ESP8266 class
         
@@ -68,25 +68,17 @@ class ESP8266:
         """
         self.__rxData=str()
         self.__txData=atCMD
-        #print("---------------------------"+self.__txData)
         self.__uartObj.write(self.__txData)
         self.__rxData=bytes()
         
+        print('\r\nCommand: '+atCMD)
+        
         time.sleep(delay)
-        
-        #while self.__uartObj.any()>0:
-        #    self.__rxData += self.__uartObj.read(1)
-        
-        while True:
-            #print(".")
-            if self.__uartObj.any()>0:
-                #print(self.__uartObj.any())
-                break
-        
+                
         while self.__uartObj.any()>0:
             self.__rxData += self.__uartObj.read(UART_Rx_BUFFER_LENGTH)
-            
-        #print(self.__rxData)
+
+
         if ESP8266_OK_STATUS in self.__rxData:
             return self.__rxData
         elif ESP8266_ERROR_STATUS in self.__rxData:
@@ -148,7 +140,7 @@ class ESP8266:
             retData = self._sendToESP8266("ATE0\r\n")
             if(retData != None):
                 if ESP8266_OK_STATUS in retData:
-                    return True
+                    return retData
                 else:
                     return False
             else:
@@ -157,7 +149,7 @@ class ESP8266:
             retData = self._sendToESP8266("ATE1\r\n")
             if(retData != None):
                 if ESP8266_OK_STATUS in retData:
-                    return True
+                    return retData
                 else:
                     return False
             else:
@@ -174,12 +166,6 @@ class ESP8266:
         retData = self._sendToESP8266("AT+GMR\r\n")
         if(retData != None):
             if ESP8266_OK_STATUS in retData:
-                #print(str(retData,"utf-8"))
-                retData = str(retData).partition(r"OK")[0]
-                #print(str(retData,"utf-8"))
-                retData = retData.split(r"\r\n")
-                retData[0] = retData[0].replace("b'","")
-                retData=str(retData[0]+"\r\n"+retData[1]+"\r\n"+retData[2])
                 return retData
             else:
                 return None
@@ -459,7 +445,7 @@ class ESP8266:
             return 0, None
             
         
-    def doHttpPost(self,host,path,user_agent="RPi-Pico",content_type,content,port=80):
+    def doHttpPost(self,host,path,user_agent="RPi-Pico",content_type="",content="",port=80):
         """
         This fucntion use to complete a HTTP Post operation
         
@@ -504,4 +490,80 @@ class ESP8266:
         """
         print('Destructor called, ESP8266 deleted.')
         pass
+    
+    def createAsAccessPoint(self,ssid):
+        retData = self._sendToESP8266('AT+CWSAP="'+ssid+'","",3,0'+'\r\n')
+        self._sendToESP8266('AT+CIPMUX=1'+'\r\n')
         
+        if(retData!=None):
+            if ESP8266_OK_STATUS in retData:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def getLocalIpAddress(self):
+        retData = self._sendToESP8266("AT+CIFSR\r\n")
+        if(retData!=None):
+            if ESP8266_OK_STATUS in retData:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def createServer(self):
+        retData = self._sendToESP8266("AT+CIPSERVER=1,80\r\n")
+        if(retData!=None):
+            if ESP8266_OK_STATUS in retData:
+                return retData
+            else:
+                return False
+        else:
+            return False
+
+    def listenForConnections(self):
+        print('Listening for connections...')
+        
+        while True:
+            receivedConnectionData = ""
+            
+            self.__rxData=bytes()
+            while self.__uartObj.any()>0:
+                self.__rxData += self.__uartObj.read(1)
+                
+            receivedConnectionData = self.__rxData.decode('utf-8')
+            
+            time.sleep(2)
+                        
+            if '+IPD' in receivedConnectionData: # if a connection is found, respond with HTML
+                id_index = receivedConnectionData.find('+IPD')
+                connection_id =  receivedConnectionData[id_index+5]
+                #print("connectionId:" + connection_id)
+                
+                pageContent = self.getPageContent()
+                pageContentLength = len(pageContent)
+                pageWrapLength = 97
+                totalPageLength = str(pageContentLength + pageWrapLength)
+                
+                self._sendToESP8266('AT+CIPSEND='+connection_id+','+totalPageLength+''+'\r\n')
+                time.sleep(1)
+                self.__uartObj.write('HTTP/1.1 200 OK'+'\r\n')
+                self.__uartObj.write('Content-Type: text/html'+'\r\n')
+                self.__uartObj.write('Connection: close'+'\r\n')
+                self.__uartObj.write(''+'\r\n')
+                self.__uartObj.write('<!DOCTYPE HTML>'+'\r\n')
+                self.__uartObj.write('<html>'+'\r\n')
+                self.__uartObj.write('<body>'+'\r\n')
+                self.__uartObj.write(pageContent+'\r\n')
+                self.__uartObj.write('</body></html>'+'\r\n')
+                time.sleep(2)
+                self._sendToESP8266('AT+CIPCLOSE='+ connection_id+'\r\n')
+                time.sleep(2)
+                
+                print("Waiting for connection")
+
+    def getPageContent(self):
+        return 'This is the page content :) woohoo'
+
